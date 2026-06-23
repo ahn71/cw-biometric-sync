@@ -1,0 +1,83 @@
+# ==========================================
+# Python
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+venv/
+.venv/
+env/
+ENV/
+
+# Distribution
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Installer Logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit Test / Coverage
+.coverage
+.coverage.*
+.pytest_cache/
+htmlcov/
+.tox/
+.nox/
+
+# IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# OS Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+logs/
+*.log
+
+# Runtime Files
+*.pid
+*.lock
+*.sqlite
+*.db
+
+# Environment Variables
+.env
+.env.*
+!.env.example
+
+# Local Configuration (contains secrets)
+local_config.py
+
+# Windows Service
+*.service
+*.bat.bak
+
+# Temporary Files
+*.tmp
+*.temp
+
+# Backup Files
+*.bak
+*.old
+
+# Python Bytecode
+*.pyo
+*.pyd
+
+# MyPy
+.mypy_cache/
+
+# Ruff
+.ruff_cache/
+
+# PyInstaller
+*.spec
