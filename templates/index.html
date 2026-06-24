@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CW Biomatric Sync Monitor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <aside class="app-sidebar" id="sidebar">
+        <div class="brand">
+            <img class="brand-logo" src="{{ url_for('static', filename='img/logo.png') }}" alt="CW Biometric Sync">
+            <div>
+                <strong>CW Biomatric Sync</strong>
+                <span>ZK Attendance Monitor</span>
+            </div>
+        </div>
+
+        <nav class="nav-list" aria-label="Primary">
+            <button class="nav-item active" type="button" data-section="overview"><span class="nav-icon">DB</span>Dashboard</button>
+            <button class="nav-item" type="button" data-section="devices"><span class="nav-icon">DV</span>Devices</button>
+            <button class="nav-item" type="button" data-section="users"><span class="nav-icon">US</span>Users</button>
+            <button class="nav-item" type="button" data-section="punches"><span class="nav-icon">IO</span>Check IN-OUT Logs</button>
+        </nav>
+
+        <div class="sidebar-status">
+            <span>Sync Engine</span>
+            <strong id="sidebar_status">Checking...</strong>
+            <small id="sidebar_refresh">Waiting for refresh</small>
+        </div>
+    </aside>
+
+    <main class="app-main">
+        <header class="topbar">
+            <button class="icon-button mobile-only" id="menu_toggle" type="button" aria-label="Open navigation">☰</button>
+            <div class="topbar-title">
+                <span class="eyebrow">Sync operations control center</span>
+                <h1 id="page_title">Dashboard Overview</h1>
+            </div>
+            <label class="global-search" aria-label="Search dashboard">
+                <span>Search</span>
+                <input id="global_search" type="search" placeholder="Employee, device, department">
+            </label>
+            <div class="top-actions">
+                <button id="service_toggle_btn" class="service-switch" type="button" aria-pressed="false">
+                    <span class="switch-track"><span class="switch-thumb"></span></span>
+                    <span id="service_toggle_label">Checking...</span>
+                </button>
+                <button class="notification-button" type="button" aria-label="Notifications">
+                    <span class="bell">NT</span>
+                    <strong id="notification_count">--</strong>
+                </button>
+            </div>
+        </header>
+
+        <section id="overview" class="section active" data-title="Dashboard Overview">
+            <div class="dashboard-grid">
+                <section class="panel span-7">
+                    <div class="panel-header">
+                        <div><h2>Device List</h2><p>Configured terminals with sync and punch counters</p></div>
+                        <span id="device_summary" class="device-summary">Scanning</span>
+                    </div>
+                    <div class="table-wrap compact-table">
+                        <table class="data-table dashboard-device-table" id="overview_devices_table">
+                            <thead><tr><th>Device</th><th>IP</th><th>Status</th><th>Punches</th><th>Users</th><th>Last Sync</th><th></th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </section>
+                
+                <div class="span-5">
+                    <div class="metric-grid top-metrics" style="gap:6px">
+                        <article class="stat-card accent-indigo">
+                            <div class="stat-icon-wrap"><span class="stat-icon">US</span></div>
+                            <div class="stat-body">
+                                <span class="stat-label">Total Users</span>
+                                <strong class="stat-value" id="total_users">--</strong>
+                                <span class="stat-desc">Seen in punch logs</span>
+                            </div>
+                        </article>
+                        <article class="stat-card accent-green">
+                            <div class="stat-icon-wrap"><span class="stat-icon">IO</span></div>
+                            <div class="stat-body">
+                                <span class="stat-label">Today's Check IN-OUT</span>
+                                <strong class="stat-value" id="today_check_total">--</strong>
+                                <span class="stat-desc">All punches from device logs</span>
+                            </div>
+                        </article>
+                    </div>
+                    <section class="panel" style="margin-top:18px">
+                        <div class="panel-header">
+                            <div><h2>Live Monitor</h2><p>Latest accepted check in/out punches</p></div>
+                            <span id="punch_source" class="pill muted">Loading</span>
+                        </div>
+                        <div id="live_feed" class="live-feed dashboard-feed"></div>
+                    </section>
+                </div>
+                
+            </div>
+
+            
+        </section>
+
+        <section id="devices" class="section" data-title="Devices Module">
+            <section class="panel">
+                <div class="panel-header">
+                    <div><h2>Biometric Devices</h2><p>Configured ZK terminals — monitor status and trigger sync</p></div>
+                    <div class="table-actions"><input id="device_search" class="table-search" type="search" placeholder="Search devices"></div>
+                </div>
+                <div class="table-wrap">
+                    <table class="data-table" id="devices_table">
+                        <thead><tr><th>Device</th><th>IP</th><th>Status</th><th>Punches</th><th>Users</th><th>Last Sync</th><th></th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="pagination-row"><span id="devices_count_label">-- devices</span></div>
+            </section>
+
+            <section class="detail-layout">
+                <article class="panel">
+                    <div class="panel-header"><div><h2>Device Details</h2><p id="selected_device_name">Select a device to inspect</p></div><span id="selected_device_status" class="pill muted">Ready</span></div>
+                    <div class="detail-grid" id="device_detail_grid"></div>
+                </article>
+                <article class="panel">
+                    <div class="panel-header"><div><h2>Synchronization</h2><p>Last sync and punch receipt timeline</p></div></div>
+                    <div class="timeline" id="device_timeline"></div>
+                </article>
+            </section>
+        </section>
+
+        <section id="users" class="section" data-title="Users Module">
+            <section class="panel">
+                <div class="panel-header">
+                    <div><h2>Employees and Enrollments</h2><p>Searchable biometric user registry</p></div>
+                    <div class="filter-row"><select id="department_filter" class="control-select"><option value="">All departments</option></select><input id="user_search" class="table-search" type="search" placeholder="Search users"></div>
+                </div>
+                <div class="table-wrap">
+                    <table class="data-table" id="users_table">
+                        <thead><tr><th>Employee ID</th><th>Enroll ID</th><th>Name</th><th>Department</th><th>Designation</th><th>Mobile Number</th><th>Status</th><th></th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="pagination-row"><span id="users_count_label">-- users</span></div>
+            </section>
+
+            <section class="panel">
+                <div class="panel-header"><div><h2>User Profile</h2><p id="selected_user_name">Select a user to view biometric profile</p></div><span id="selected_user_status" class="pill muted">Ready</span></div>
+                <div class="profile-grid" id="user_profile"></div>
+            </section>
+        </section>
+
+        <section id="punches" class="section" data-title="Check IN-OUT Logs">
+            <section class="panel">
+                <div class="panel-header">
+                    <div><h2>Check IN-OUT Logs</h2><p>Device attendance transactions with filters</p></div>
+                </div>
+                <div class="filter-bar">
+                    <input id="date_from" type="date">
+                    <input id="date_to" type="date">
+                    <select id="punch_employee_filter"><option value="">All employees</option></select>
+                    <select id="punch_device_filter"><option value="">All devices</option></select>
+                    <select id="punch_type_filter"><option value="">All check types</option><option value="IN">Check In</option><option value="OUT">Check Out</option></select>
+                    <input id="punch_search" type="search" placeholder="Employee ID or name">
+                </div>
+                <div class="table-wrap">
+                    <table class="data-table" id="punch_table">
+                        <thead><tr><th>Date & Time</th><th>Employee ID</th><th>Employee Name</th><th>Device Name</th><th>Check Type</th><th>Verification Method</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="pagination-row"><span id="punches_count_label">-- records</span></div>
+            </section>
+        </section>
+
+    </main>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
