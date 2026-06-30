@@ -93,7 +93,53 @@ def main():
     except:
         error_logger.exception('exception has occurred in the main function...')
 
+def process_biometric():
 
+    info_logger.info("Starting BIOMETRIC Sync")
+
+    for device in config.devices:
+
+        device_attendance_logs = None
+
+        dump_file = get_dump_file_name_and_directory(
+            device['device_id'],
+            device['ip']
+        )
+
+        ...
+
+        pull_process_and_push_data(device, device_attendance_logs)
+
+    info_logger.info("Finished BIOMETRIC Sync")
+
+def process_idesk360():
+
+    info_logger.info("Starting IDESK360 Sync")
+
+    punches = convert_sessions_to_punches()
+
+    for punch in punches:
+
+        status_code, message = send_to_cwhrms(
+            employee_code=punch["emp_id"],
+            timestamp=punch["time"],
+            device_id="IDESK360",
+            log_type=punch["type"]
+        )
+
+        if status_code == 200:
+
+            info_logger.info(
+                f"IDESK360\t{punch['emp_id']}\t{punch['type']}\t{punch['time']}"
+            )
+
+        else:
+
+            error_logger.error(
+                f"IDESK360\t{punch['emp_id']}\t{message}"
+            )
+
+    info_logger.info("Finished IDESK360 Sync")
 def pull_process_and_push_data(device, device_attendance_logs=None):
     print('inside pull_process_and_push_data')
     """ Takes a single device config as param and pulls data from that device.
