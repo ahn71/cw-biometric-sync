@@ -1,7 +1,5 @@
 import requests
 import datetime
-import json
-
 
 class IDesk360Provider:    
 
@@ -13,6 +11,8 @@ class IDesk360Provider:
         self.status = status
 
         self.agent_map = {}
+        self.idesk360_last_sync=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.config.ATT_SOURCE="IDESK360"
 
     # -------------------------------------------------------
     # Public
@@ -25,6 +25,8 @@ class IDesk360Provider:
         self.agent_map = self.get_agents()
 
         from_date, to_date = self.get_sync_range()
+        
+        self.idesk360_last_sync=to_date
 
         sessions = self.get_login_sessions(
             from_date,
@@ -99,13 +101,9 @@ class IDesk360Provider:
             f"/api/agent-login-sessions-report/"
         )
 
-        date_range = (
-            f"{from_date} 12:00 AM - "
-            f"{to_date} 11:59 PM"
-        )
-
-        params = {
-            "key": self.config.IDESK360_API_KEY,
+        date_range = f"{from_date.strftime('%d/%m/%Y %I:%M %p')} - {to_date.strftime('%d/%m/%Y %I:%M %p')}"
+        print(date_range)
+        params = {           
             "datetimes": date_range
         }
 
@@ -222,28 +220,15 @@ class IDesk360Provider:
     # -------------------------------------------------------
 
     def get_sync_range(self):
-
-        last_sync = self.status.get(
-            "idesk360_last_sync"
-        )
-
+        last_sync = self.status.get("idesk360_last_sync")
         if last_sync:
+            # Notice the double datetime.datetime
+            start = datetime.datetime.strptime(last_sync, "%Y-%m-%d %H:%M:%S")
+        else:            
+            start = datetime.datetime.strptime(self.config.IMPORT_START_DATE, "%Y%m%d")      
 
-            start = datetime.datetime.strptime(
-                last_sync,
-                "%Y-%m-%d"
-            )
-
-        else:
-
-            start = datetime.datetime.now()
-
-        end = datetime.datetime.now()
-
-        return (
-            start.strftime("%d/%m/%Y"),
-            end.strftime("%d/%m/%Y")
-        )
+        end = datetime.datetime.now().replace(microsecond=0)
+        return start, end
 
     # -------------------------------------------------------
     # Update Sync
@@ -253,9 +238,8 @@ class IDesk360Provider:
 
         self.status.set(
             "idesk360_last_sync",
-            datetime.datetime.now().strftime(
-                "%Y-%m-%d"
-            )
+            self.idesk360_last_sync.strftime("%Y-%m-%d %H:%M:%S")
+            #datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         )
 
         self.status.save()

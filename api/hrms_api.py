@@ -6,6 +6,7 @@ import local_config as config
 
 
 def send_attendance(
+        att_source,
     employee_field_value,
     timestamp,
     device_id=None,
@@ -16,6 +17,7 @@ def send_attendance(
 
     if config.HR_SYSTEM.upper() == "CWHRMS":
         return send_to_cwhrms(
+            att_source,
             employee_field_value,
             timestamp,
             device_id,
@@ -41,6 +43,7 @@ def send_attendance(
 
 
 def send_to_cwhrms(
+    att_source,
     employee_code,
     timestamp,
     device_id=None,
@@ -62,7 +65,7 @@ def send_to_cwhrms(
             timestamp.astimezone(timezone.utc)
             .strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z",
 
-        "source": config.ATT_SOURCE,
+        "source": att_source,
 
         "note": "",
 
@@ -96,11 +99,12 @@ def send_to_cwhrms(
             timeout=30
         )
 
+        response_json = response.json()
         if response.status_code == 200:
 
             try:
 
-                response_json = response.json()
+                
 
                 return (
                     200,

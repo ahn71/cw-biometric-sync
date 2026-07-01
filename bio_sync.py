@@ -21,7 +21,7 @@ attendance = AttendanceService(
 
 
 def main():
-
+    
     attendance.sync()
 
 

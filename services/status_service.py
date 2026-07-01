@@ -1,7 +1,7 @@
 import os
 import datetime
 from pickledb import PickleDB
-
+import json
 import local_config as config
 
 
@@ -18,12 +18,13 @@ class StatusService:
                 "status.json"
             )
         )
+        self.db.load()
 
     # ----------------------------------------
     # Basic Methods
     # ----------------------------------------
 
-    def get(self, key, default=None):
+    def get(self, key, default=None):       
         value = self.db.get(key)
         return default if value is None else value
 

@@ -107,6 +107,7 @@ class AttendanceService:
     def send_punch(self, punch):      
 
         status_code, message = send_attendance(
+            att_source=self.config.ATT_SOURCE,
             employee_field_value=punch['employee_code'],
             timestamp=punch['timestamp'],
             device_id=punch['device_id'],
