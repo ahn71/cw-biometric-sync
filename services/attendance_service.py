@@ -1,5 +1,6 @@
 from providers.biometric_provider import BiometricProvider
 from providers.idesk360_provider import IDesk360Provider
+from providers.pendulum_provider import PendulumProvider
 
 from api.hrms_api import send_attendance
 
@@ -53,6 +54,17 @@ class AttendanceService:
                 )
             )
 
+        if "PENDULUM" in self.config.ATTENDANCE_PROVIDERS:
+
+            self.providers.append(
+                PendulumProvider(
+                    self.config,
+                    self.info_logger,
+                    self.error_logger,
+                    self.status
+                )
+            )
+
     # ----------------------------------------
     # Run All Providers
     # ----------------------------------------
@@ -86,8 +98,10 @@ class AttendanceService:
             self.info_logger.info(
                 f"{provider_name} returned {len(punches)} punches."
             )
+            print(f"{provider_name} returned {len(punches)} punches.")
 
             for punch in punches:
+
 
                 self.send_punch(punch)
 
@@ -96,6 +110,7 @@ class AttendanceService:
             self.info_logger.info(
                 f"{provider_name} completed successfully."
             )
+            print(f"{provider_name} completed successfully.")
 
         except Exception as ex:
             self.error_logger.exception(f"{provider_name} failed")
@@ -106,7 +121,7 @@ class AttendanceService:
 
     def send_punch(self, punch):      
 
-        status_code, message = send_attendance(
+        status_code, message = send_attendance(self=self,
             att_source=self.config.ATT_SOURCE,
             employee_field_value=punch['employee_code'],
             timestamp=punch['timestamp'],

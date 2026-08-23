@@ -153,7 +153,7 @@ def pull_process_and_push_data(device, device_attendance_logs=None):
     attendance_success_logger = setup_logger(attendance_success_log_file, '/'.join([config.LOGS_DIRECTORY, attendance_success_log_file])+'.log')
     attendance_failed_logger = setup_logger(attendance_failed_log_file, '/'.join([config.LOGS_DIRECTORY, attendance_failed_log_file])+'.log')
     if not device_attendance_logs:
-        device_attendance_logs = get_all_attendance_from_device(device['ip'], device_id=device['device_id'], clear_from_device_on_fetch=device['clear_from_device_on_fetch'])
+        device_attendance_logs = get_all_attendance_from_device(device['ip'],device['port'], device_id=device['device_id'], clear_from_device_on_fetch=device['clear_from_device_on_fetch'])
         if not device_attendance_logs:
             return
     # for finding the last successfull push and restart from that point (or) from a set 'config.IMPORT_START_DATE' (whichever is later)
@@ -215,6 +215,11 @@ def get_all_attendance_from_device(ip, port=4370, timeout=30, device_id=None, cl
     attendances = []
     try:
         conn = zk.connect()
+
+        print(conn.get_platform())
+        print(conn.get_firmware_version())
+        print(conn.get_device_name())
+        print(conn.get_serialnumber())
         x = conn.disable_device()
         # device is disabled when fetching data
         info_logger.info("\t".join((ip, "Device Disable Attempted. Result:", str(x))))
@@ -234,8 +239,8 @@ def get_all_attendance_from_device(ip, port=4370, timeout=30, device_id=None, cl
                 info_logger.info("\t".join((ip, "Attendance Clear Attempted. Result:", str(x))))
         x = conn.enable_device()
         info_logger.info("\t".join((ip, "Device Enable Attempted. Result:", str(x))))
-    except:
-        error_logger.exception(str(ip)+' exception when fetching from device...')
+    except Exception as e:
+        error_logger.exception(f"{ip} exception when fetching from device: {e}")
         raise Exception('Device fetch failed.')
     finally:
         if conn:
@@ -300,17 +305,18 @@ def send_to_cwhrms(
         "token": config.CWHRMS_API_KEY,
         "Content-Type": "application/json"
     }
+    punchWithDate= timestamp.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
 
     payload = {
-    "empAttDeviceID": employee_code,
-    "punchWithDate": timestamp.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z",    
+    "empAttDeviceID": employee_code,       
+    "punchWithDate": punchWithDate,    
     "source": config.ATT_SOURCE,
     "note": "",
     "companyId": config.CWHRMS_COMPANY_ID,
     "additionalInfo": json.dumps({
         "empAttDeviceID": employee_code,
         "device_id": device_id,
-        "punchWithDate": timestamp.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z",
+        "punchWithDate": punchWithDate,
         "log_type": log_type
     })
 }

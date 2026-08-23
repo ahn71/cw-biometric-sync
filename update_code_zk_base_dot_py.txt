@@ -1,0 +1,131 @@
+    def get_attendance(self):
+        """
+        return attendance record
+
+        :return: List of Attendance object
+        """
+        self.read_sizes()
+        if self.records == 0:
+            return []
+        users = self.get_users()
+        if self.verbose: print (users)
+        attendances = []
+        attendance_data, size = self.read_with_buffer(const.CMD_ATTLOG_RRQ)
+        if size < 4:
+            if self.verbose: print ("WRN: no attendance data")
+            return []
+        total_size = unpack("I", attendance_data[:4])[0]
+        record_size = total_size/self.records
+        if self.verbose: print ("record_size is ", record_size)
+        attendance_data = attendance_data[4:]
+        
+        print("TOTAL SIZE:", total_size)
+        print("RECORD COUNT:", self.records)
+        print("RECORD SIZE:", record_size)
+        if record_size == 8:
+            while len(attendance_data) >= 8:
+                uid, status, timestamp, punch = unpack('HB4sB', attendance_data.ljust(8, b'\x00')[:8])
+                if self.verbose: print (codecs.encode(attendance_data[:8], 'hex'))
+                attendance_data = attendance_data[8:]
+                tuser = list(filter(lambda x: x.uid == uid, users))
+                if not tuser:
+                    user_id = str(uid)
+                else:
+                    user_id = tuser[0].user_id
+                timestamp = self.__decode_time(timestamp)
+                attendance = Attendance(user_id, timestamp, status, punch, uid)
+                attendances.append(attendance)
+        elif record_size == 16:
+            while len(attendance_data) >= 16:
+                user_id, timestamp, status, punch, reserved, workcode = unpack('<I4sBB2sI', attendance_data.ljust(16, b'\x00')[:16])
+                user_id = str(user_id)
+                if self.verbose: print(codecs.encode(attendance_data[:16], 'hex'))
+                attendance_data = attendance_data[16:]
+                tuser = list(filter(lambda x: x.user_id == user_id, users))
+                if not tuser:
+                    if self.verbose: print("no uid {}", user_id)
+                    uid = str(user_id)
+                    tuser = list(filter(lambda x: x.uid == user_id, users))
+                    if not tuser:
+                        uid = str(user_id)
+                    else:
+                        uid = tuser[0].uid
+                        user_id = tuser[0].user_id
+                else:
+                    uid = tuser[0].uid
+                timestamp = self.__decode_time(timestamp)
+                attendance = Attendance(user_id, timestamp, status, punch, uid)
+                attendances.append(attendance)
+        else:
+            
+            # while len(attendance_data) >= 40:
+            #     uid, user_id, status, timestamp, punch, space = unpack('<H24sB4sB8s', attendance_data.ljust(40, b'\x00')[:40])
+            #     if self.verbose: print (codecs.encode(attendance_data[:40], 'hex'))
+            #     user_id = (user_id.split(b'\x00')[0]).decode(errors='ignore')
+            #     timestamp = self.__decode_time(timestamp)
+
+            #     attendance = Attendance(user_id, timestamp, status, punch, uid)
+            #     attendances.append(attendance)
+            #     attendance_data = attendance_data[40:]
+            print(" exe.. start, while len(attendance_data) >= 49:")
+            while len(attendance_data) >= 49:
+
+                raw_record = attendance_data[:49]
+
+                if self.verbose:
+                    print(codecs.encode(raw_record, 'hex'))
+
+                uid, user_id, status, timestamp, punch, space = unpack(
+                    '<H24sB4sB17s',
+                    raw_record
+                )
+
+                user_id = (user_id.split(b'\x00')[0]).decode(errors='ignore')
+
+                timestamp = self.__decode_time(timestamp)
+
+                attendance = Attendance(
+                    user_id,
+                    timestamp,
+                    status,
+                    punch,
+                    uid
+                )
+
+                attendances.append(attendance)
+
+                attendance_data = attendance_data[49:]
+        return attendances
+
+
+    def __decode_time(self, t):        
+        raw = t.hex()
+
+        t_int = unpack("<I", t)[0]
+
+        # print("\nRAW:", raw)
+        # print("INT:", t_int)
+
+        second = t_int % 60
+        t_int //= 60
+
+        minute = t_int % 60
+        t_int //= 60
+
+        hour = t_int % 24
+        t_int //= 24
+
+        day = t_int % 31 + 1
+        t_int //= 31
+
+        month = t_int % 12 + 1
+        t_int //= 12
+
+        year = t_int + 2000
+
+        # print(
+        #     f"DECODE => {year}-{month}-{day} "
+        #     f"{hour}:{minute}:{second}"
+        # )
+
+        return datetime(year, month, day, hour, minute, second)

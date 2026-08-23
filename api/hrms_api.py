@@ -1,11 +1,11 @@
 import json
 import requests
 from datetime import timezone
-
+import time
 import local_config as config
 
 
-def send_attendance(
+def send_attendance(self,
         att_source,
     employee_field_value,
     timestamp,
@@ -16,7 +16,7 @@ def send_attendance(
 ):
 
     if config.HR_SYSTEM.upper() == "CWHRMS":
-        return send_to_cwhrms(
+        return send_to_cwhrms(self,
             att_source,
             employee_field_value,
             timestamp,
@@ -42,7 +42,7 @@ def send_attendance(
         )
 
 
-def send_to_cwhrms(
+def send_to_cwhrms(self,
     att_source,
     employee_code,
     timestamp,
@@ -91,15 +91,23 @@ def send_to_cwhrms(
             f"{config.CWHRMS_URL}"
             "/api/Attendance/attendace/biometric/create"
         )
-
+        start_time = time.perf_counter()
+        self.info_logger.info("Sending started")
         response = requests.post(
             url,
             headers=headers,
             json=payload,
             timeout=30
         )
+        elapsed = time.perf_counter() - start_time
+        self.info_logger.info(
+       f"Sending Completed. Time={elapsed:.3f}s"
+       )
 
         response_json = response.json()
+        self.info_logger.info(
+        f"Sending Completed. Status Code: {response.status_code}"
+        )
         if response.status_code == 200:
 
             try:

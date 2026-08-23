@@ -15,7 +15,7 @@ class StatusService:
         self.db = PickleDB(
             os.path.join(
                 config.LOGS_DIRECTORY,
-                "status_idesk360.json"
+                "status_synced.json"
             )
         )
         self.db.load()

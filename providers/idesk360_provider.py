@@ -228,6 +228,7 @@ class IDesk360Provider:
             start = datetime.datetime.strptime(self.config.IMPORT_START_DATE, "%Y%m%d")      
 
         end = datetime.datetime.now().replace(microsecond=0)
+        #end = datetime.datetime(2026, 8, 23, 23, 59, 59)
         return start, end
 
     # -------------------------------------------------------

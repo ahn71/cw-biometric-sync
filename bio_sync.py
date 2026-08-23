@@ -25,7 +25,7 @@ def main():
     attendance.sync()
 
 
-def infinite_loop(sleep_time=15):
+def infinite_loop(sleep_time=600): # 600 for 10mins
 
     info_logger.info("Service Started")
 
